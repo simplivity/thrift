@@ -51,13 +51,11 @@ ext.mockitoVersion = property('mockito.version')
 
 // In this section you declare where to find the dependencies of your project
 repositories {
+    mavenLocal()
     maven {
-        name 'Maven Central Repository'
-        url mvnRepo
-    }
-    maven {
-        name 'Apache Maven Repository'
-        url apacheRepo
+        name "ArtifactoryRepo"
+        // see gradle.properties
+        url artifactoryUrl
     }
 }
 

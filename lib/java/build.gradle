@@ -20,9 +20,12 @@
 // Using the legacy plugin classpath for Clover so it can be loaded optionally
 buildscript {
     repositories {
-        google()
-        jcenter()
-        gradlePluginPortal()
+        mavenLocal()
+        maven {
+            name "ArtifactoryRepo"
+            // see gradle.properties
+            url artifactoryUrl
+        }
     }
 
     dependencies {
