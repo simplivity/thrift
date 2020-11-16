@@ -36,7 +36,7 @@
 #include <fcntl.h>
 #endif
 
-#define OPENSSL_VERSION_NO_THREAD_ID_BEFORE    0x10000000L
+#define OPENSSL_VERSION_NO_THREAD_ID_BEFORE    0x10100000L
 #define OPENSSL_ENGINE_CLEANUP_REQUIRED_BEFORE 0x10100000L
 
 #include <boost/shared_array.hpp>
