@@ -36,7 +36,7 @@
 #include <fcntl.h>
 #endif
 
-#define OPENSSL_VERSION_NO_THREAD_ID_BEFORE    0x10000000L
+#define OPENSSL_VERSION_NO_THREAD_ID_BEFORE    0x10100000L
 #define OPENSSL_ENGINE_CLEANUP_REQUIRED_BEFORE 0x10100000L
 
 #include <boost/shared_array.hpp>
@@ -70,6 +70,7 @@ static bool openSSLInitialized = false;
 static boost::shared_array<Mutex> mutexes;
 
 static void callbackLocking(int mode, int n, const char*, int) {
+  GlobalOutput.printf("Inside callbackLocking");
   if (mode & CRYPTO_LOCK) {
     // assertion of (px != 0) here typically means that a TSSLSocket's lifetime
     // exceeded the lifetime of the TSSLSocketFactory that created it, and the
@@ -82,6 +83,7 @@ static void callbackLocking(int mode, int n, const char*, int) {
 
 #if (OPENSSL_VERSION_NUMBER < OPENSSL_VERSION_NO_THREAD_ID_BEFORE)
 static unsigned long callbackThreadID() {
+GlobalOutput.printf("Inside callbackThreadID for OpenSSL version 1.0.X or lesser");
 #ifdef _WIN32
   return (unsigned long)GetCurrentThreadId();
 #else
@@ -126,9 +128,11 @@ void initializeOpenSSL() {
 #endif
 
 #if (OPENSSL_VERSION_NUMBER < OPENSSL_VERSION_NO_THREAD_ID_BEFORE)
+  GlobalOutput.printf("Inside initializeOpenSSL: CRYPTO_set_id_callback for OpenSSL version 1.0.X or lesser");
   CRYPTO_set_id_callback(callbackThreadID);
 #endif
 
+  GlobalOutput.printf("Inside initializeOpenSSL: CRYPTO_set_locking_callback");
   CRYPTO_set_locking_callback(callbackLocking);
 
   // dynamic locking
