@@ -89,6 +89,14 @@ static unsigned long callbackThreadID() {
   return (unsigned long)pthread_self();
 #endif
 }
+#else
+static void currentThreadID(CRYPTO_THREADID *threadid) {
+#ifdef _WIN32
+  CRYPTO_THREADID_set_numeric(threadid, (unsigned long)GetCurrentThreadId());
+#else
+  CRYPTO_THREADID_set_numeric(threadid, (unsigned long)pthread_self());
+#endif
+}
 #endif
 
 static CRYPTO_dynlock_value* dyn_create(const char*, int) {
@@ -126,16 +134,25 @@ void initializeOpenSSL() {
   mutexes = boost::shared_array<Mutex>(new Mutex[ ::CRYPTO_num_locks()]);
 #endif
 
+// OpenSSL 1.0.0 and above the CRYPTO_set_id_callback API is deprecated and
+// changed to CRYPTO_THREADID_set_callback
 #if (OPENSSL_VERSION_NUMBER < OPENSSL_VERSION_NO_THREAD_ID_BEFORE)
   CRYPTO_set_id_callback(callbackThreadID);
+#else
+  CRYPTO_THREADID_set_callback(currentThreadID);
 #endif
 
-  CRYPTO_set_locking_callback(callbackLocking);
+  if (!CRYPTO_get_locking_callback())
+  {
+    CRYPTO_set_locking_callback(callbackLocking);
+  }
 
-  // dynamic locking
-  CRYPTO_set_dynlock_create_callback(dyn_create);
-  CRYPTO_set_dynlock_lock_callback(dyn_lock);
-  CRYPTO_set_dynlock_destroy_callback(dyn_destroy);
+  if (!CRYPTO_get_dynlock_create_callback()) {
+    // dynamic locking
+    CRYPTO_set_dynlock_create_callback(dyn_create);
+    CRYPTO_set_dynlock_lock_callback(dyn_lock);
+    CRYPTO_set_dynlock_destroy_callback(dyn_destroy);
+  }
 }
 
 void cleanupOpenSSL() {
